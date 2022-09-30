@@ -1,30 +1,28 @@
 #!/usr/bin/python3
-# Fabfile to delete out-of-date archives.
-import os
-from fabric.api import *
+# A fabfile deletes out-of-date archives
 
-env.hosts = ["35.174.60.179", "3.236.72.194"]
+from fabric.api import env, run, local
+
+env.hosts = ['44.210.147.177', '3.83.35.191']
+# Set the username
+env.user = "ubuntu"
+# Set the keyfile
+env.key_filename = '~/.ssh/id_rsa'
 
 
 def do_clean(number=0):
-    """Delete out-of-date archives.
-
-    Args:
-        number (int): The number of archives to keep.
-
-    If number is 0 or 1, keeps only the most recent archive. If
-    number is 2, keeps the most and second-most recent archives,
-    etc.
     """
-    number = 1 if int(number) == 0 else int(number)
+    deletes out-of-date archives
+    """
+    number = int(number)
+    if number == 0 or number == 1:
+        num = 2
+    elif number >= 2:
+        num = number + 1
 
-    archives = sorted(os.listdir("versions"))
-    [archives.pop() for i in range(number)]
-    with lcd("versions"):
-        [local("rm ./{}".format(a)) for a in archives]
-
-    with cd("/data/web_static/releases"):
-        archives = run("ls -tr").split()
-        archives = [a for a in archives if "web_static_" in a]
-        [archives.pop() for i in range(number)]
-        [run("rm -rf ./{}".format(a)) for a in archives]
+    local(
+        'cd versions && ls -t web_static_* | tail -n +{} | \
+xargs rm -f -- && cd -'.format(num))
+    run(
+        'cd /data/web_static/releases && ls -t web_static_* | tail -n +{} | \
+xargs rm -f -- && cd -'.format(num))
